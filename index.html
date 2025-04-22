@@ -17,71 +17,19 @@
   <div id="sidebar" class="sidebar bg-dark text-white border-end position-fixed top-0 start-0 bottom-0">
     <button id="sidebarToggleButton" class="btn toggle-button btn-success">X</button>
     <div class="p-5 text-right">
-      <h3>DNSM Database</h3>
-      <hr />
-      <!-- model option -->
-      <div class="form-group">
-        <label for="modelSelector">Select Model</label>
-        <select id="modelSelector" class="form-select" aria-label="PDBID">
-          <option selected>Select Model</option>
-        </select>
-      </div>
-      <!-- model reset button -->
-      <div class="form-group">
-        <button class="btn btn-danger" id="modelResetButton">Reset Model</button>
-      </div>
-      <hr />
-      <!-- organism filter -->
-      <div class="form-group">
-        <label for="filterOrganismSelector">Filter by Organism</label>
-        <select id="filterOrganismSelector" class="form-select" aria-label="filter Category">
-          <option selected value="null">Filter by Organism</option>
-        </select>
-      </div>
-      <!-- heavy v-gene filter -->
-      <div class="form-group">
-        <label for="filterVhSelector">Filter by Heavy V-Gene</label>
-        <select id="filterVhSelector" class="form-select" aria-label="filter Category">
-          <option selected value="null">Filter by VH</option>
-        </select>
-      </div>
-      <!-- light v-gene filter -->
-      <div class="form-group">
-        <label for="filterVlSelector">Filter by Light V-Gene</label>
-        <select id="filterVlSelector" class="form-select" aria-label="filter Category">
-          <option selected value="null">Filter by VL</option>
-        </select>
-      </div>
-      <!-- heavy j-gene filter -->
-      <div class="form-group">
-        <label for="filterJhSelector">Filter by Heavy J-Gene</label>
-        <select id="filterJhSelector" class="form-select" aria-label="filter Category">
-          <option selected value="null">Filter by JH</option>
-        </select>
-      </div>
-      <!-- light j-gene filter -->
-      <div class="form-group">
-        <label for="filterJlSelector">Filter by Light J-Gene</label>
-        <select id="filterJlSelector" class="form-select" aria-label="filter Category">
-          <option selected value="null">Filter by JL</option>
-        </select>
-      </div>
-      <!-- filter reset button -->
-      <div class="form-group">
-        <button class="btn btn-danger" id="filterResetButton">Reset Filters</button>
-      </div>
+      <h3>GCReplay Data</h3>
       <hr />
       <!-- pdbid selector -->
       <div class="form-group">
-        <label for="pdbidSelector">Select by PDBID</label>
-        <select id="pdbidSelector" class="form-select" aria-label="PDBID">
-          <option selected>Select by PDBID</option>
+        <label for="fileSelector">Select PDB</label>
+        <select id="fileSelector" class="form-select" aria-label="PDBID">
+          <option selected>Select by PDB</option>
         </select>
       </div>
       <!-- pdbid inspect/reset button -->
       <div class="form-group">
-        <button class="btn btn-primary" id="pdbInspectButton">Inspect PDBID</button>
-        <button class="btn btn-danger" id="pdbResetButton">Reset PDBID</button>
+        <button class="btn btn-primary" id="pdbInspectButton">Inspect PDB</button>
+        <button class="btn btn-danger" id="pdbResetButton">Reset PDB</button>
       </div>
       <hr />
       <div id="loadedAlert" class="form-group alert alert-success" role="alert">

@@ -3,42 +3,40 @@
 const url_input = document.getElementById('urlInput');
 const my_iframe = document.getElementById('myIframe');
 const pdb_inspect_button = document.getElementById('pdbInspectButton');
-const pdb_reset_button = document.getElementById('pdbResetButton');
-const filter_reset_button = document.getElementById('filterResetButton');
+// const pdb_reset_button = document.getElementById('pdbResetButton');
+// const filter_reset_button = document.getElementById('filterResetButton');
 const sidebar = document.querySelector('.sidebar');
 const sidebar_toggle_button = document.getElementById('sidebarToggleButton');
 const alert_message_box = document.getElementById('loadedAlert');
 var selector = {
-  'model': document.getElementById('modelSelector'),
   'pdbid': document.getElementById('pdbidSelector'),
-  'organism': document.getElementById('filterOrganismSelector'),
-  'jh': document.getElementById('filterJhSelector'),
-  'jl': document.getElementById('filterJlSelector'),
-  'vh': document.getElementById('filterVhSelector'),
-  'vl': document.getElementById('filterVlSelector'),
 };
 var selector_fn = {
-  'model': null,
   'pdbid': null,
-  'organism': null,
-  'jh': null,
-  'jl': null,
-  'vh': null,
-  'vl': null,
 };
 
 // ** Data
 
 const github_paths = [
-  `https://raw.githubusercontent.com/davidrich27/gcreplay-viz/`,
+  `https://raw.githubusercontent.com/davidrich27/gcreplay-viz/main`,
 ]
 const github_path = github_paths[0];
-const summary_path = `${github_path}/metadata/summary.json`;
+const summary_db_path = `${github_path}/data/metadata/summary.json`;
 var summary_db = null;
 
 const sidebar_btn_txt = {
   'open': `<<<`,
   'close': `>>>`
+};
+
+var filter_fields = [];
+var all_fields = ['pdbid']
+
+var selected = {
+  'pdbid': null,
+};
+var prompt = {
+  'pdbid': 'Select by PDBID',
 };
 
 // Template for dms-viz.github.io query string.
@@ -131,8 +129,8 @@ class Utility {
 
   }
 
-  static async load_summary() {
-    summary_db = await Utility.load_json(summary_path);
+  static async load_summary_db() {
+    summary_db = await Utility.load_json(summary_db_path);
     summary_db = new JsonTable(summary_db, 'row');
     return summary_db;
   }
@@ -304,6 +302,8 @@ class JsonTable {
 }
 
 class Event {
+  // Window slider and alerts
+
   static sidebar_toggle() {
     sidebar.classList.toggle('sidebar-collapse');
     sidebar_toggle_button.innerText = (sidebar_toggle_button.innerText == sidebar_btn_txt['open']) ? sidebar_btn_txt['close'] : sidebar_btn_txt['open'];
@@ -331,17 +331,7 @@ class Event {
     }
   }
 
-  static find_data_path(data_name) {
-    for (const i in github_paths) {
-      var github_path = github_paths[i];
-      var data_path = `${github_path}/data/${data_name}`;
-      var file_exists = Utility.check_file_exists(data_path);
-      if (file_exists) {
-        return data_path;
-      }
-    }
-    return null;
-  }
+  // Submitting requests
 
   static submit_dms_viz_request(request = dms_viz_request) {
     var query_string = Utility.create_query_string(request);
@@ -350,10 +340,26 @@ class Event {
     my_iframe.src = url;
   }
 
+  static load_pdb() {
+    // get copy of request and fill fields
+    const my_dms_viz_request = JSON.parse(JSON.stringify(dms_viz_request));
+    my_dms_viz_request.name = selector['pdbid'].options[selector['pdbid'].selectedIndex].text;
+    const file_name = selector['pdbid'].value;
+    my_dms_viz_request.data = `${github_path}/data/dmsviz-jsons/${file_name}`;
+
+    console.log(my_dms_viz_request);
+    Event.submit_dms_viz_request(my_dms_viz_request);
+  }
+
   static load_pdb_from_query_string() {
     const url = new URL(window.location.href);
     const params = new URLSearchParams(url.search.toLowerCase());
     console.log(params);
+    const query_pdbid = params.get('pdbid');
+    const query_model = params.get('model');
+    if (query_model) {
+      Event.select_value_from_dropdown('model', query_model.toUpperCase());
+    }
     var is_pdb_loaded = false;
     if (query_pdbid) {
       is_pdb_loaded = Event.load_pdb(query_pdbid);
@@ -364,6 +370,19 @@ class Event {
     }
     return is_pdb_loaded;
   }
+
+  // Menus
+
+  static populate_dropdown_from_data(menu_elem, data, value_field, info_field) {
+    menu_elem.innerHTML = '<option value="">Select Dataset</option>';
+
+    data.forEach(item => {
+      const option = document.createElement('option');
+      option.value = item[value_field];
+      option.textContent = item[info_field];
+      menu_elem.appendChild(option);
+    });
+  }
 }
 
 // ** Event Listeners
@@ -373,62 +392,13 @@ document.addEventListener('DOMContentLoaded', async function () {
   sidebar_toggle_button.innerText = sidebar_btn_txt['open']
 
   // Initialize data
-  summary_db = await Utility.load_summary();
-  summary_db = new JsonTable(summary_db, 'row');
+  summary_db = await Utility.load_summary_db();
+  // summary_db = new JsonTable(summary_db, 'row');
 
-  // Initialize filters
-  Event.model_repopulate();
-  Event.filter_repopulate_all();
+  // Populate data
+  Event.populate_dropdown_from_data(selector['pdbid'], summary_db.data, 'dmsviz_filepath', 'metric_full_name');
 
-  // Add events
-  pdb_inspect_button.addEventListener('click', Event.pdb_inspect);
-  pdb_reset_button.addEventListener('click', Event.pdb_reset);
-
-  for (const i in filter_fields) {
-    const field = filter_fields[i];
-    selector_fn[field] = function (event) {
-      index = event.target.selectedIndex;
-      value = event.target.value;
-      Event.filter_update(field, value);
-    };
-    selector[field].addEventListener('change', selector_fn[field]);
-  }
-
-  fields = ['pdbid', 'model']
-  fields_disable = [false, true]
-  for (const i in fields) {
-    const field = fields[i];
-    selector_fn[field] = function (event) {
-      index = event.target.selectedIndex;
-      value = event.target.value;
-      selected[field] = value;
-      Event.filter_set_active(field, fields_disable[i]);
-    };
-    selector[field].addEventListener('change', selector_fn[field]);
-  }
-
-  // Set default model
-  default_model = 'DNSM';
-  selector['model'].value = default_model;
-  selected['model'] = default_model;
-  Event.filter_set_active('model', true);
-
-  // Set to pdb in query string
-  var is_pdb_loaded = Event.load_pdb_from_query_string()
-  console.log(`is_pdb_loaded: ${is_pdb_loaded}`)
-  if (!is_pdb_loaded) {
-    value = '6mtx';
-    selector['pdbid'].value = value;
-    selected['pdbid'] = value;
-    Event.filter_set_active('pdbid');
-    pdb_inspect_button.click();
-    // pdb_reset_button.click();
-  }
+  // Event buttons
+  sidebar_toggle_button.addEventListener('click', Event.sidebar_toggle);
+  pdb_inspect_button.addEventListener('click', Event.load_pdb);
 });
-
-
-
-
-
-
-

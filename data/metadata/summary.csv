@@ -1,6 +1,6 @@
 dmsviz_filepath,pdb_filepath,chainid,metric_name,metric_full_name
-_temp/CGG_naive.H.value.dmsviz.json,IgY-CH2_EH2_final_real_space_refined_021.pdb,H,value,Binding and Expression
-_temp/CGG_naive.H.delta.dmsviz.json,IgY-CH2_EH2_final_real_space_refined_021.pdb,H,delta,Binding and Expression: Change Relative to Wildtype
-_temp/CGG_naive.H.n_bc.dmsviz.json,IgY-CH2_EH2_final_real_space_refined_021.pdb,H,n_bc,Binding and Expression: Number of Barcodes
-_temp/CGG_naive.H.n_libs.dmsviz.json,IgY-CH2_EH2_final_real_space_refined_021.pdb,H,n_libs,Binding and Expression: Number of Libraries
-_temp/CGG_naive.H.single_nt.dmsviz.json,IgY-CH2_EH2_final_real_space_refined_021.pdb,H,single_nt,Binding and Expression: Mutation by Single Nucleotide Change
+CGG_naive.H.value.dmsviz.json,IgY-CH2_EH2_final_real_space_refined_021.pdb,H,value,Binding and Expression
+CGG_naive.H.delta.dmsviz.json,IgY-CH2_EH2_final_real_space_refined_021.pdb,H,delta,Binding and Expression: Change Relative to Wildtype
+CGG_naive.H.n_bc.dmsviz.json,IgY-CH2_EH2_final_real_space_refined_021.pdb,H,n_bc,Binding and Expression: Number of Barcodes
+CGG_naive.H.n_libs.dmsviz.json,IgY-CH2_EH2_final_real_space_refined_021.pdb,H,n_libs,Binding and Expression: Number of Libraries
+CGG_naive.H.single_nt.dmsviz.json,IgY-CH2_EH2_final_real_space_refined_021.pdb,H,single_nt,Binding and Expression: Mutation by Single Nucleotide Change

@@ -40,10 +40,6 @@ const sidebar_btn_txt = {
   'open': `<<<`,
   'close': `>>>`
 };
-const model_dict = {
-  'DASM': 'dasm',
-  'DNSM': 'dnsm'
-}
 
 // Template for dms-viz.github.io query string.
 // For query string arguments, see `dms-viz.github.io/v0/js/tool.js:638-696`
@@ -136,9 +132,9 @@ class Utility {
   }
 
   static async load_summary() {
-    sabdab = await Utility.load_json(sabdab_summary_path);
-    sabdab = new JsonTable(sabdab, 'row');
-    return sabdab;
+    summary_db = await Utility.load_json(summary_path);
+    summary_db = new JsonTable(summary_db, 'row');
+    return summary_db;
   }
 
   static iota(length, start = 0, step = 1) {
@@ -308,103 +304,9 @@ class JsonTable {
 }
 
 class Event {
-  static filter_repopulate_all() {
-    for (const i in all_fields) {
-      const field = all_fields[i];
-      Event.filter_repopulate(field);
-    }
-  }
-
-  static filter_repopulate(field) {
-    var values = [];
-    for (const i in sabdab.selected_values_by_field[field]) {
-      var value = sabdab.selected_values_by_field[field][i];
-      var split_values = value.split(',')
-      for (const j in split_values) {
-        values.push(split_values[j]);
-      }
-    }
-    values = Utility.create_unique_sorted_array(values);
-    selector[field].innerHTML = HTMLHelper.option_list(values, prompt[field]);
-    selector[field].selectedIndex = 0;
-  }
-
-  static filter_set_active(field, disable = true) {
-    selector[field].classList.add('bg-primary');
-    selector[field].classList.add('text-white');
-    if (disable) {
-      selector[field].setAttribute("disabled", "true");
-    }
-  }
-
-  static filter_set_inactive(field) {
-    selector[field].selectedIndex = 0;
-    selector[field].classList.remove('bg-primary');
-    selector[field].classList.remove('text-white');
-    selector[field].removeAttribute("disabled");
-  }
-
-  static filter_reset() {
-    sabdab.reset_filter();
-    for (const i in all_fields) {
-      const field = all_fields[i];
-      Event.filter_repopulate(field);
-      Event.filter_set_inactive(field);
-      selected[field] = null;
-    }
-  }
-
   static sidebar_toggle() {
     sidebar.classList.toggle('sidebar-collapse');
     sidebar_toggle_button.innerText = (sidebar_toggle_button.innerText == sidebar_btn_txt['open']) ? sidebar_btn_txt['close'] : sidebar_btn_txt['open'];
-  }
-
-  static pdb_inspect() {
-    if (selected['model'] == null || selector['model'].selectedIndex == 0) {
-      selected['model'] = null;
-      selector['model'].selectedIndex == 0;
-      alert_message_box.innerText = `Please choose a Model from dropdown before selecting 'Inspect PDBID'`;
-      Event.alert_set_color('alert-warning');
-      return;
-    }
-    if (selected['pdbid'] == null || selector['pdbid'].selectedIndex == 0) {
-      selected['pdbid'] = null;
-      selector['pdbid'].selectedIndex == 0;
-      alert_message_box.innerText = `Please choose a PDBID from dropdown before selecting 'Inspect PDBID'`;
-      Event.alert_set_color('alert-warning');
-      return;
-    }
-    console.log(`Inspecting PDBID: ${selected['pdbid']}`)
-    var row_data = sabdab.find_first_row_by_query('pdbid', selected['pdbid']);
-    var db_info = ``;
-    db_info += HTMLHelper.ul_open()
-    db_info += HTMLHelper.li(`Model: ${selected['model']}`);
-    db_info += HTMLHelper.li(`PDBID: ${row_data['pdbid']}`);
-    db_info += HTMLHelper.li(`Organism: ${row_data['organism']}`);
-    db_info += HTMLHelper.li(`Heavy V-Gene: ${row_data['vh']}`);
-    db_info += HTMLHelper.li(`Light V-Gene: ${row_data['vl']}`);
-    db_info += HTMLHelper.li(`Heavy J-Gene: ${row_data['jh']}`);
-    db_info += HTMLHelper.li(`Light J-Gene: ${row_data['jl']}`);
-    db_info += HTMLHelper.ul_close();
-    alert_message_box.innerHTML = `${db_info}`;
-    console.log(`PDBID table data: `, row_data);
-    dms_viz_request['name'] = `${selected['pdbid']}`;
-    dms_viz_request['data'] = Event.find_pdb_data_path(selected['pdbid']);
-    var load_status = ``;
-    if (dms_viz_request['data'] != null) {
-      console.log(`JSON data file FOUND: ${dms_viz_request['data']}`);
-      load_status += `Load successful!\n`;
-      Event.alert_set_color('alert-success');
-    } else {
-      console.log(`JSON data file NOT FOUND: ${dms_viz_request['data']}`);
-      load_status += `Load failed: dms-viz json file not found.\n`;
-      Event.alert_set_color('alert-danger');
-    }
-    alert_message_box.innerHTML += HTMLHelper.hr();
-    alert_message_box.innerHTML += HTMLHelper.p(load_status);
-    if (dms_viz_request['data'] != null) {
-      Event.submit_dms_viz_request();
-    }
   }
 
   static alert_set_text(text, append = false, alert_color = null) {
@@ -429,12 +331,10 @@ class Event {
     }
   }
 
-  static find_pdb_data_path(pdbid) {
-    var pdbid_name = pdbid.toLowerCase();
-    var model_name = selected['model'].toLowerCase();
+  static find_data_path(data_name) {
     for (const i in github_paths) {
       var github_path = github_paths[i];
-      var data_path = `${github_path}/data/${model_name}/${pdbid_name}-combined.ALL.json`;
+      var data_path = `${github_path}/data/${data_name}`;
       var file_exists = Utility.check_file_exists(data_path);
       if (file_exists) {
         return data_path;
@@ -450,52 +350,10 @@ class Event {
     my_iframe.src = url;
   }
 
-  static pdb_reset() {
-    selected['pdbid'] = null;
-    Event.filter_repopulate('pdbid');
-    Event.filter_set_inactive('pdbid');
-  }
-
-  static model_repopulate() {
-    selector['model'].innerHTML = HTMLHelper.option_list(Object.keys(model_dict), prompt['model']);
-    selector['model'].selectedIndex = 0;
-  }
-
-  static model_reset() {
-    selected['model'] = null;
-    selector['model'].selectedIndex = 0;
-    Event.filter_set_inactive('model');
-  }
-
-  static filter_update(field, value) {
-    selected[field] = value;
-    sabdab.apply_filter(field, selected[field], true);
-    Event.filter_set_active(field);
-    for (const j in all_fields) {
-      const other_field = all_fields[j];
-      Event.filter_repopulate(other_field);
-      if (selected[other_field] != null) {
-        selector[other_field].selectedIndex = 1;
-        for (let i = 0; selector[other_field].options.length; i++) {
-          if (selector[other_field].options[i].value == selected[other_field]) {
-            selector[other_field].selectedIndex = i;
-            break;
-          }
-        }
-      }
-    }
-    Event.filter_repopulate('pdbid');
-  }
-
   static load_pdb_from_query_string() {
     const url = new URL(window.location.href);
     const params = new URLSearchParams(url.search.toLowerCase());
     console.log(params);
-    const query_pdbid = params.get('pdbid');
-    const query_model = params.get('model');
-    if (query_model) {
-      Event.select_value_from_dropdown('model', query_model.toUpperCase());
-    }
     var is_pdb_loaded = false;
     if (query_pdbid) {
       is_pdb_loaded = Event.load_pdb(query_pdbid);
@@ -505,28 +363,6 @@ class Event {
       }
     }
     return is_pdb_loaded;
-  }
-
-  static load_pdb(query_pdbid) {
-    var is_found = Event.select_value_from_dropdown('pdbid', query_pdbid);
-    if (is_found) {
-      pdb_inspect_button.click();
-    }
-    return is_found;
-  }
-
-  static select_value_from_dropdown(field, value) {
-    var is_found = false;
-    for (const option of selector[field]) {
-      if (option.value == value) {
-        is_found = true;
-        selector[field].value = value;
-        selected[field] = value;
-        Event.filter_set_active(field);
-        break;
-      }
-    }
-    return is_found;
   }
 }
 
@@ -545,9 +381,6 @@ document.addEventListener('DOMContentLoaded', async function () {
   Event.filter_repopulate_all();
 
   // Add events
-  sidebar_toggle_button.addEventListener('click', Event.sidebar_toggle);
-  model_reset_button.addEventListener('click', Event.model_reset);
-  filter_reset_button.addEventListener('click', Event.filter_reset);
   pdb_inspect_button.addEventListener('click', Event.pdb_inspect);
   pdb_reset_button.addEventListener('click', Event.pdb_reset);
 

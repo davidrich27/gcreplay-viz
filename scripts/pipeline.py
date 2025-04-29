@@ -295,7 +295,7 @@ def main(args=sys.argv):
 
         # add summary data entry
         summary_data["metric_full_name"].append(metric_full_name)
-        summary_data["dmsviz_filepath"].append(dmsviz_path)
+        summary_data["dmsviz_filepath"].append(os.path.basename(dmsviz_path))
         summary_data["pdb_filepath"].append(os.path.basename(input_pdb_path))
         summary_data["chainid"].append(chain_str)
         summary_data["metric_name"].append(metric_name)

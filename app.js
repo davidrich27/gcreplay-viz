@@ -4,7 +4,6 @@ const url_input = document.getElementById('urlInput');
 const my_iframe = document.getElementById('myIframe');
 const pdb_inspect_button = document.getElementById('pdbInspectButton');
 const pdb_reset_button = document.getElementById('pdbResetButton');
-const model_reset_button = document.getElementById('modelResetButton');
 const filter_reset_button = document.getElementById('filterResetButton');
 const sidebar = document.querySelector('.sidebar');
 const sidebar_toggle_button = document.getElementById('sidebarToggleButton');
@@ -31,12 +30,11 @@ var selector_fn = {
 // ** Data
 
 const github_paths = [
-  `https://raw.githubusercontent.com/matsengrp/dnsm-json-database/main`,
-  `https://raw.githubusercontent.com/matsengrp/dasm-json-database-1/main`,
+  `https://raw.githubusercontent.com/davidrich27/gcreplay-viz/`,
 ]
 const github_path = github_paths[0];
-const sabdab_summary_path = `${github_path}/metadata/sabdab_summary_for_dnsm.json`;
-var sabdab = null;
+const summary_path = `${github_path}/metadata/summary.json`;
+var summary_db = null;
 
 const sidebar_btn_txt = {
   'open': `<<<`,
@@ -46,28 +44,6 @@ const model_dict = {
   'DASM': 'dasm',
   'DNSM': 'dnsm'
 }
-
-var filter_fields = ['organism', 'jh', 'jl', 'vh', 'vl'];
-var all_fields = ['organism', 'jh', 'jl', 'vh', 'vl', 'pdbid']
-
-var selected = {
-  'model': null,
-  'pdbid': null,
-  'organism': null,
-  'jh': null,
-  'jl': null,
-  'vh': null,
-  'vl': null,
-};
-var prompt = {
-  'model': 'Select Model',
-  'pdbid': 'Select by PDBID',
-  'organism': 'Filter by Organism',
-  'jh': 'Filter by JH',
-  'jl': 'Filter by JL',
-  'vh': 'Filter by VH',
-  'vl': 'Filter by VL',
-};
 
 // Template for dms-viz.github.io query string.
 // For query string arguments, see `dms-viz.github.io/v0/js/tool.js:638-696`
@@ -159,7 +135,7 @@ class Utility {
 
   }
 
-  static async load_sabdab() {
+  static async load_summary() {
     sabdab = await Utility.load_json(sabdab_summary_path);
     sabdab = new JsonTable(sabdab, 'row');
     return sabdab;
@@ -561,10 +537,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   sidebar_toggle_button.innerText = sidebar_btn_txt['open']
 
   // Initialize data
-  sabdab = await Utility.load_sabdab();
-  // !! temporary: filtering out mouse_ig
-  human_data = sabdab.data.filter(d => d['organism'] !== 'mouse_ig');
-  sabdab = new JsonTable(human_data, 'row');
+  summary_db = await Utility.load_summary();
+  summary_db = new JsonTable(summary_db, 'row');
 
   // Initialize filters
   Event.model_repopulate();

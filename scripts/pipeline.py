@@ -267,8 +267,8 @@ def main(args=sys.argv):
     print(input_metric_paths)
     input_metric_path = input_metric_paths[0]
 
-    pdb_prefix = os.path.basename(input_pdb_path).split(".")[0]
-    pdb_prefix = "CGG_naive"
+    # pdb_prefix = os.path.basename(input_pdb_path).split(".")[0]
+    pdb_prefix = "CGG_naive_DMS"
     metric_names = {
         "value": ["bind_CGG", "expr"],
         "delta": ["delta_bind_CGG", "delta_expr"],
@@ -332,7 +332,7 @@ def main(args=sys.argv):
         add_options += condition_options
 
         configure_dms_viz(
-            name="CGGnaive_DMS",
+            name=f"{pdb_prefix} :: {metric_full_name}",
             plot_colors=COLOR_PALETTE,
             metric="factor",
             input_metric_path=metric_path,

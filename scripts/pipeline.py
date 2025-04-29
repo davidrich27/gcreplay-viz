@@ -278,7 +278,7 @@ def main(args=sys.argv):
     }
     metric_full_names = {
         "value": "Binding and Expression",
-        "delta": "Binding and Expression: Change Relative to Wildtype",
+        "delta": "Binding and Expression: Delta Change Relative to Wildtype",
         "n_bc": "Binding and Expression: Number of Barcodes",
         "n_libs": "Binding and Expression: Number of Libraries",
         "single_nt": "Binding and Expression: Mutation by Single Nucleotide Change",

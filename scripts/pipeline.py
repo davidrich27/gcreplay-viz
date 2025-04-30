@@ -312,6 +312,8 @@ def main(args=sys.argv):
 
     metric_names = {
         # "all_metrics": ["bind_CGG", "expr", "delta_bind_CGG", "delta_expr", "n_bc_bind_CGG", "n_bc_expr", "n_libs_bind_CGG", "n_libs_expr", "single_nt"],
+        "binding": ["bind_CGG"],
+        "expression": ["expr"],
         "metric": ["bind_CGG", "expr"],
         "delta": ["delta_bind_CGG", "delta_expr"],
         "n_bc": ["n_bc_bind_CGG", "n_bc_expr"],
@@ -320,6 +322,8 @@ def main(args=sys.argv):
     }
     metric_full_names = {
         # "all_metrics": "All Binding/Expression metrics",
+        "binding": "Binding",
+        "expression": "Expression",
         "metric": "Binding/Expression",
         "delta": "Binding/Expression: Delta Change Relative to Wildtype",
         "n_bc": "Binding/Expression: Number of Barcodes",

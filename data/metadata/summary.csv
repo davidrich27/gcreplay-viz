@@ -1,4 +1,4 @@
-dmsviz_filepath,pdb_filepath,pdb_prefix,chainid,metric_name,metric_full_name,description
+dmsviz_filepath,pdb_filepath,pdbid,chainid,metricid,metric_full_name,description
 CGG_mean.H.metric.dmsviz.json,CGG_mean.pdb,CGG_mean,H,metric,Binding/Expression,CGG_mean :: H :: Binding/Expression
 CGG_mean.H.delta.dmsviz.json,CGG_mean.pdb,CGG_mean,H,delta,Binding/Expression: Delta Change Relative to Wildtype,CGG_mean :: H :: Binding/Expression: Delta Change Relative to Wildtype
 CGG_mean.H.n_bc.dmsviz.json,CGG_mean.pdb,CGG_mean,H,n_bc,Binding/Expression: Number of Barcodes,CGG_mean :: H :: Binding/Expression: Number of Barcodes

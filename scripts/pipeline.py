@@ -258,9 +258,9 @@ def main(args=sys.argv):
     summary_data = {
         "dmsviz_filepath": [],
         "pdb_filepath": [],
-        "pdb_prefix": [],
+        "pdbid": [],
         "chainid": [],
-        "metric_name": [],
+        "metricid": [],
         "metric_full_name": [],
         "description": [],
     }
@@ -402,9 +402,9 @@ def main(args=sys.argv):
             summary_data["metric_full_name"].append(metric_full_name)
             summary_data["dmsviz_filepath"].append(os.path.basename(dmsviz_path))
             summary_data["pdb_filepath"].append(os.path.basename(pdb_path))
-            summary_data["pdb_prefix"].append(pdb_prefix)
+            summary_data["pdbid"].append(pdb_prefix)
             summary_data["chainid"].append(chain_str)
-            summary_data["metric_name"].append(metric_name)
+            summary_data["metricid"].append(metric_name)
             full_description = f"{pdb_prefix} :: {chain_str} :: {metric_full_name}"
             summary_data["description"].append(full_description)
 

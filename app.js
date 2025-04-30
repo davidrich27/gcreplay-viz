@@ -396,7 +396,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   // summary_db = new JsonTable(summary_db, 'row');
 
   // Populate data
-  Event.populate_dropdown_from_data(selector['pdbid'], summary_db.data, 'dmsviz_filepath', 'metric_full_name');
+  Event.populate_dropdown_from_data(selector['pdbid'], summary_db.data, 'dmsviz_filepath', 'description');
 
   // Event buttons
   sidebar_toggle_button.addEventListener('click', Event.sidebar_toggle);

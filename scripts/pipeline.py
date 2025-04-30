@@ -29,7 +29,7 @@ def mpl_rgba_to_hex(rgba):
     return "#{:02X}{:02X}{:02X}".format(r, g, b)
 
 
-def generate_color_palette(n_colors=10, colormap='tab10', as_hex=True):
+def generate_color_palette(n_colors=10, colormap='viridis', as_hex=True):
     cmap = plt.get_cmap(colormap)
     colors = [cmap(i / max(n_colors - 1, 1)) for i in range(n_colors)]
 
@@ -385,7 +385,7 @@ def main(args=sys.argv):
             # build dms-viz json
             dmsviz_path = f"{temp_dir}/{pdb_prefix}.{chain_str}.{metric_name}.dmsviz.json"
             COLOR_PALETTE = generate_color_palette(
-                n_colors=num_metrics, colormap='tab10', as_hex=True)
+                n_colors=num_metrics, colormap='viridis', as_hex=True)
             configure_dms_viz(
                 name=f"{pdb_prefix} :: {metric_full_name}",
                 plot_colors=COLOR_PALETTE,

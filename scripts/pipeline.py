@@ -19,6 +19,7 @@ from utility import *
 DARK_PALETTE = ["#7570b3", "#808080"]  # original Dark2 pallete
 VISIBLE_PALETTE = ["#675ed6", "#808080"]  # more visible pallete
 COLOR_PALETTE = VISIBLE_PALETTE
+COLOR_MAP = 'brg'
 # amino acid codes
 AA_ALPHABET = sorted(list("RKHDEQNSTYWFAILMVGPC"))
 AA_COUNT = len(AA_ALPHABET)
@@ -385,7 +386,7 @@ def main(args=sys.argv):
             # build dms-viz json
             dmsviz_path = f"{temp_dir}/{pdb_prefix}.{chain_str}.{metric_name}.dmsviz.json"
             COLOR_PALETTE = generate_color_palette(
-                n_colors=num_metrics, colormap='gist_earth', as_hex=True)
+                n_colors=num_metrics, colormap=COLOR_MAP, as_hex=True)
             configure_dms_viz(
                 name=f"{pdb_prefix} :: {metric_full_name}",
                 plot_colors=COLOR_PALETTE,

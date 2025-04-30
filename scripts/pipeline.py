@@ -9,6 +9,8 @@ import pandas as pd
 import json
 import pprint
 from pathlib import Path
+import matplotlib.pyplot as plt
+
 from Bio.PDB import PDBParser,PDBIO
 from Bio.PDB.DSSP import DSSP
 from utility import *
@@ -20,6 +22,23 @@ COLOR_PALETTE = VISIBLE_PALETTE
 # amino acid codes
 AA_ALPHABET = sorted(list("RKHDEQNSTYWFAILMVGPC"))
 AA_COUNT = len(AA_ALPHABET)
+
+
+def mpl_rgba_to_hex(rgba):
+    r, g, b, a = [int(x * 255) for x in rgba]
+    return "#{:02X}{:02X}{:02X}".format(r, g, b)
+
+
+def generate_color_palette(n_colors=10, colormap='tab10', as_hex=True):
+    cmap = plt.get_cmap(colormap)
+    colors = [cmap(i / max(n_colors - 1, 1)) for i in range(n_colors)]
+
+    if as_hex:
+        # Convert RGBA to hex
+        return [mpl_rgba_to_hex(color) for color in colors]
+    else:
+        # Return RGB tuples without alpha
+        return [tuple(color[:3]) for color in colors]
 
 
 def pdb_get_chainids(pdb_path):
@@ -93,7 +112,7 @@ def metric_get_binding_df(pdb_df, metric_path, chainids=None, metric_names=None)
     raw_metric_df.loc[raw_metric_df["wildtype"] == raw_metric_df["mutant"], "mutant"] = "-"
     if chainids is not None:
         raw_metric_df = raw_metric_df[raw_metric_df["chain"].isin(chainids)]
-    raw_metric_df["site"] = [x for x in range(1,len(set(raw_metric_df['position']))+1) for _ in range(AA_COUNT)]
+        raw_metric_df["site"] = [x for x in range(1,len(set(raw_metric_df['position']))+1) for _ in range(AA_COUNT)]
 
     metric_df = pd.melt(
         raw_metric_df,
@@ -126,10 +145,14 @@ def write_sitemap_csv(pdb_df, output_path, site_count=None):
     return sitemap_df
 
 
-def write_metric_csv(pdb_df, metric_df, output_path, site_count=None):
+def write_metric_csv(pdb_df, metric_df, output_path, site_count=None, metric_cols=None):
     if site_count:
         assert len(metric_df) >= site_count
         metric_df = metric_df[metric_df["site"] > site_count]
+
+    if metric_cols:
+        metric_df = metric_df.copy()
+        metric_df = metric_df[metric_df["condition"].isin(metric_cols)]
 
     if output_path:
         metric_df.to_csv(output_path, index=False)
@@ -229,11 +252,13 @@ def main(args=sys.argv):
     # light_chainids = args["light_chain_id"]
     heavy_chainids = ['H']
     light_chainids = ['L']
-    selected_chainids = heavy_chainids
+    # focal_chainids = (heavy_chainids + light_chainids)
+    focal_chainids = (heavy_chainids)
 
     summary_data = {
         "dmsviz_filepath": [],
         "pdb_filepath": [],
+        "pdb_prefix": [],
         "chainid": [],
         "metric_name": [],
         "metric_full_name": [],
@@ -260,7 +285,7 @@ def main(args=sys.argv):
     # get all pdbs
     all_pdb_dfs = {}
     for input_pdb_path in input_pdb_paths:
-        for chainid in selected_chainids:
+        for chainid in all_chainids:
             pdb_df = pdb_get_df(
                 pdb_path=input_pdb_path,
                 chainids=chainid)
@@ -272,38 +297,61 @@ def main(args=sys.argv):
             # print(f"aa_seq: {len(aa_seq)} {aa_seq}")
             aa_seqs[chainid].append(aa_seq)
 
-    pprint.pp(aa_seqs)
-    # compare_seqs(aa_seqs=aa_seqs)
-
     # get first pdb_df from file
     first_key = next(iter(all_pdb_dfs))
     pdb_df = all_pdb_dfs[first_key]
 
     # parse metric files
     input_metric_paths = glob.glob(f"{input_dir}/*.csv")
-    print(input_metric_paths)
     input_metric_path = input_metric_paths[0]
 
     metric_names = {
-        "value": ["bind_CGG", "expr"],
+        # "all_metrics": ["bind_CGG", "expr", "delta_bind_CGG", "delta_expr", "n_bc_bind_CGG", "n_bc_expr", "n_libs_bind_CGG", "n_libs_expr", "single_nt"],
+        "metric": ["bind_CGG", "expr"],
         "delta": ["delta_bind_CGG", "delta_expr"],
         "n_bc": ["n_bc_bind_CGG", "n_bc_expr"],
         "n_libs": ["n_libs_bind_CGG", "n_libs_expr"],
         "single_nt": ["single_nt"],
     }
     metric_full_names = {
-        "value": "Binding and Expression",
-        "delta": "Binding and Expression: Delta Change Relative to Wildtype",
-        "n_bc": "Binding and Expression: Number of Barcodes",
-        "n_libs": "Binding and Expression: Number of Libraries",
-        "single_nt": "Binding and Expression: Mutation by Single Nucleotide Change",
+        # "all_metrics": "All Binding/Expression metrics",
+        "metric": "Binding/Expression",
+        "delta": "Binding/Expression: Delta Change Relative to Wildtype",
+        "n_bc": "Binding/Expression: Number of Barcodes",
+        "n_libs": "Binding/Expression: Number of Libraries",
+        "single_nt": "Binding/Expression: Mutation by Single Nucleotide Change",
     }
 
+    all_metric_dfs = {}
+    for (pdb_path, chainid), pdb_df in all_pdb_dfs.items():
+        metric_df = metric_get_binding_df(
+                    pdb_df=pdb_df,
+                    metric_path=input_metric_path,
+                    chainids=[chainid],
+                    metric_names=None)
+        all_metric_dfs[chainid] = metric_df
+
+        tmp_metric_df = metric_df.drop_duplicates(subset=["position"])
+        aa_seq = ''.join(list(tmp_metric_df['wildtype']))
+        # print(f"aa_seq: {chainid} {len(aa_seq)} {aa_seq}")
+        if len(aa_seq) > 0:
+            aa_seqs[chainid].append(aa_seq)
+
+    pprint.pp(aa_seqs)
+    # compare_seqs(aa_seqs=aa_seqs)
+
+    # build csvs and dmsviz jsons
     for (pdb_path, chainid), pdb_df in all_pdb_dfs.items():
         pdb_prefix = os.path.basename(pdb_path).split(".")[0]
         # pdb_prefix = "CGG_naive_DMS"
         chain_str = f"{''.join(chainid)}"
         print(f"pdb: {pdb_prefix=} {chainid=}")
+
+        # skip if not in focal_chainids
+        if chainid not in focal_chainids:
+            continue
+        other_chainids = chainids_get_other_chainids(
+            heavy_chainids=heavy_chainids, light_chainids=light_chainids, all_chainids=all_chainids)
 
         # build sitemap csv
         sitemap_path = f"{temp_dir}/{pdb_prefix}.{chain_str}.sitemap.csv"
@@ -315,20 +363,9 @@ def main(args=sys.argv):
             print(f"metric: {metric_name=} {metric_cols=}")
             metric_full_name = metric_full_names[metric_name]
 
-            metric_df = metric_get_binding_df(
-                pdb_df=pdb_df,
-                metric_path=input_metric_path,
-                chainids=[chainid],
-                metric_names=metric_cols)
-
-            # get aa_seq
-            print(metric_df)
-            tmp_metric_df = metric_df.drop_duplicates(subset=["position"])
-            aa_seq = ''.join(list(tmp_metric_df['wildtype']))
-            print(f"aa_seq: {len(aa_seq)} {aa_seq}")
-            aa_seqs[chainid].append(aa_seq)
-
             # number of metrics
+            metric_df = all_metric_dfs[chainid]
+            metric_df = metric_df[metric_df["condition"].isin(metric_cols)]
             metric_types = set(metric_df["condition"])
             num_metrics = len(metric_types)
 
@@ -337,7 +374,8 @@ def main(args=sys.argv):
             metric_df = write_metric_csv(
                 pdb_df=pdb_df,
                 metric_df=metric_df,
-                output_path=metric_path)
+                output_path=metric_path,
+                metric_cols=metric_cols)
 
             add_options = ""
             condition_options = '--condition "condition" '
@@ -346,8 +384,8 @@ def main(args=sys.argv):
 
             # build dms-viz json
             dmsviz_path = f"{temp_dir}/{pdb_prefix}.{chain_str}.{metric_name}.dmsviz.json"
-            other_chainids = chainids_get_other_chainids(
-                heavy_chainids=[chainid], all_chainids=all_chainids)
+            COLOR_PALETTE = generate_color_palette(
+                n_colors=num_metrics, colormap='tab10', as_hex=True)
             configure_dms_viz(
                 name=f"{pdb_prefix} :: {metric_full_name}",
                 plot_colors=COLOR_PALETTE,
@@ -356,7 +394,7 @@ def main(args=sys.argv):
                 input_sitemap_path=sitemap_path,
                 output_path=dmsviz_path,
                 included_chains=chainid,
-                # excluded_chains=other_chainids,
+                excluded_chains=other_chainids,
                 add_options=add_options,
                 local_pdb_path=input_pdb_path)
 
@@ -364,6 +402,7 @@ def main(args=sys.argv):
             summary_data["metric_full_name"].append(metric_full_name)
             summary_data["dmsviz_filepath"].append(os.path.basename(dmsviz_path))
             summary_data["pdb_filepath"].append(os.path.basename(pdb_path))
+            summary_data["pdb_prefix"].append(pdb_prefix)
             summary_data["chainid"].append(chain_str)
             summary_data["metric_name"].append(metric_name)
             full_description = f"{pdb_prefix} :: {chain_str} :: {metric_full_name}"

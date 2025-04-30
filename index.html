@@ -26,10 +26,21 @@
           <option selected>Select by PDB</option>
         </select>
       </div>
+      <div class="form-group">
+        <label for="chainidSelector">Select Chain ID</label>
+        <select id="chainidSelector" class="form-select" aria-label="Metric">
+          <option selected>Select by Chain ID</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="metricidSelector">Select Metric</label>
+        <select id="metricidSelector" class="form-select" aria-label="Metric">
+          <option selected>Select by Metric</option>
+        </select>
+      </div>
       <!-- pdbid inspect/reset button -->
       <div class="form-group">
         <button class="btn btn-primary" id="pdbInspectButton">Inspect PDB</button>
-        <button class="btn btn-danger" id="pdbResetButton">Reset PDB</button>
       </div>
       <hr />
       <div id="loadedAlert" class="form-group alert alert-success" role="alert">

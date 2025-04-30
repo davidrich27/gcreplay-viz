@@ -10,9 +10,8 @@ const sidebar_toggle_button = document.getElementById('sidebarToggleButton');
 const alert_message_box = document.getElementById('loadedAlert');
 var selector = {
   'pdbid': document.getElementById('pdbidSelector'),
-};
-var selector_fn = {
-  'pdbid': null,
+  'metricid': document.getElementById('metricidSelector'),
+  'chainid': document.getElementById('chainidSelector'),
 };
 
 // ** Data
@@ -29,14 +28,10 @@ const sidebar_btn_txt = {
   'close': `>>>`
 };
 
-var filter_fields = [];
-var all_fields = ['pdbid']
-
-var selected = {
-  'pdbid': null,
-};
 var prompt = {
-  'pdbid': 'Select by PDBID',
+  'pdbid': 'Select by PDB',
+  'chainid': 'Select by Chain ID',
+  'metricid': 'Select by Metric',
 };
 
 // Template for dms-viz.github.io query string.
@@ -315,7 +310,7 @@ class Event {
     } else {
       alert_message_box.innerHTML = '';
     }
-    alert_message_box.innerHTML += HTMLHelper.p(load_status);
+    alert_message_box.innerHTML += HTMLHelper.p(text);
 
     if (alert_color) {
       Event.alert_color(alert_color);
@@ -341,11 +336,35 @@ class Event {
   }
 
   static load_pdb() {
+    // get field from database
+    const filter = {};
+    for (const key in selector) {
+      const value = selector[key].value;
+      if (value !== "") {
+        filter[key] = value;
+      }
+    }
+    const matches = summary_db.data.filter(item =>
+      Object.entries(filter).every(([key, val]) => item[key] == val)
+    );
+    const match = matches[0];
+    console.log(`matches found: ${match.length}`)
+    console.log(matches)
+
     // get copy of request and fill fields
     const my_dms_viz_request = JSON.parse(JSON.stringify(dms_viz_request));
-    my_dms_viz_request.name = selector['pdbid'].options[selector['pdbid'].selectedIndex].text;
-    const file_name = selector['pdbid'].value;
+    my_dms_viz_request.name = match['description'];
+    const file_name = match['dmsviz_filepath'];
     my_dms_viz_request.data = `${github_path}/data/dmsviz-jsons/${file_name}`;
+
+    // log request
+    var alert_text = `Loading pdb...\n`
+    alert_text += `${HTMLHelper.ul_open()}`
+    alert_text += `<li> PDB: ${match['pdbid']} </li>\n`
+    alert_text += `<li> Chain ID: ${match['chainid']} </li>\n`
+    alert_text += `<li> Metric: ${match['metric_full_name']} </li>\n`
+    alert_text += `${HTMLHelper.ul_close()}`
+    Event.alert_set_text(alert_text)
 
     console.log(my_dms_viz_request);
     Event.submit_dms_viz_request(my_dms_viz_request);
@@ -356,10 +375,7 @@ class Event {
     const params = new URLSearchParams(url.search.toLowerCase());
     console.log(params);
     const query_pdbid = params.get('pdbid');
-    const query_model = params.get('model');
-    if (query_model) {
-      Event.select_value_from_dropdown('model', query_model.toUpperCase());
-    }
+    const query_metric = params.get('metric')
     var is_pdb_loaded = false;
     if (query_pdbid) {
       is_pdb_loaded = Event.load_pdb(query_pdbid);
@@ -373,13 +389,28 @@ class Event {
 
   // Menus
 
-  static populate_dropdown_from_data(menu_elem, data, value_field, info_field) {
-    menu_elem.innerHTML = '<option value="">Select Dataset</option>';
+  static get_first_unique_rows_by_column(data, field) {
+    const seen = new Map();
+    data.forEach(row => {
+      const key = row[field];
+      if (!seen.has(key)) {
+        seen.set(key, row);
+      }
+    });
+    return Array.from(seen.values());
+  }
 
-    data.forEach(item => {
+  static populate_dropdown_from_data(menu_elem, data, value_field, text_field) {
+    const prompt_text = prompt[value_field]
+    menu_elem.innerHTML = `<option value="">-- ${prompt_text} --</option>`;
+
+    // const unique_values = [...new Set(data.map(item => item[value_field]))].sort();
+    const unique_rows = Event.get_first_unique_rows_by_column(data, value_field);
+
+    unique_rows.forEach(item => {
       const option = document.createElement('option');
       option.value = item[value_field];
-      option.textContent = item[info_field];
+      option.text = item[text_field];
       menu_elem.appendChild(option);
     });
   }
@@ -396,7 +427,9 @@ document.addEventListener('DOMContentLoaded', async function () {
   // summary_db = new JsonTable(summary_db, 'row');
 
   // Populate data
-  Event.populate_dropdown_from_data(selector['pdbid'], summary_db.data, 'dmsviz_filepath', 'description');
+  Event.populate_dropdown_from_data(selector['pdbid'], summary_db.data, 'pdbid', 'pdbid');
+  Event.populate_dropdown_from_data(selector['chainid'], summary_db.data, 'chainid', 'chainid');
+  Event.populate_dropdown_from_data(selector['metricid'], summary_db.data, 'metricid', 'metric_full_name');
 
   // Event buttons
   sidebar_toggle_button.addEventListener('click', Event.sidebar_toggle);
